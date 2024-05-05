@@ -23,9 +23,16 @@ class ViewController extends AbstractController
     #[Route('/views', name: 'view_list', methods: ['GET'])]
     public function entityList(ViewRepository $viewRepository): JsonResponse
     {
-        $viewRepository = $this->doctrine->getRepository(View::class);
-        $views = $viewRepository->findAll();
-        return $this->json($views);
+//        $viewRepository = $this->doctrine->getRepository(View::class);
+//        $views = $viewRepository->findAll();
+//        return $this->json($views);
+
+        $jsonData = [
+            ['id' => 1, 'pageViews' => 100, 'phoneViews' => 50],
+            ['id' => 2, 'pageViews' => 200, 'phoneViews' => 70],
+            ['id' => 3, 'pageViews' => 150, 'phoneViews' => 40],
+        ];
+        return $this->json($jsonData);
     }
 
 
@@ -44,13 +51,19 @@ class ViewController extends AbstractController
     #[Route('/view/{id}', name: 'view_show', methods: ['GET'])]
     public function show(int $id, ViewRepository $viewRepository): JsonResponse
     {
-        $view = $viewRepository->find($id);
+//        $view = $viewRepository->find($id);
+//        if (!$view) {
+//            return $this->json(['error' => 'View not found'], 404);
+//        }
+//        return $this->json($view);
 
-        if (!$view) {
-            return $this->json(['error' => 'View not found'], 404);
-        }
+        $jsonData = [
+            'id' => $id,
+            'pageViews' => rand(10, 100),
+            'phoneViews' => rand(5, 50),
+        ];
 
-        return $this->json($view);
+        return $this->json($jsonData);
     }
 
     #[Route('/views', name: 'views_create', methods: ['POST'])]
@@ -68,41 +81,42 @@ class ViewController extends AbstractController
         return $this->json(['message' => 'View created', 'id' => $view->getId()], 201);
     }
 
-    #[Route('/view/{id}', name: 'view_update', methods: ['PUT'])]
-    public function update(Request $request, int $id, ViewRepository $viewRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $view = $viewRepository->find($id);
+//    #[Route('/view/{id}', name: 'view_update', methods: ['PUT'])]
+//    public function update(Request $request, int $id, ViewRepository $viewRepository, EntityManagerInterface $entityManager): JsonResponse
+//    {
+//        $view = $viewRepository->find($id);
+//
+//        if (!$view) {
+//            return $this->json(['error' => 'View not found'], 404);
+//        }
+//
+//        $data = json_decode($request->getContent(), true);
+//
+//        $view->setPageViews($data['pageViews'] ?? null);
+//        $view->setPhoneViews($data['phoneViews'] ?? null);
+//
+//        $entityManager->flush();
+//
+//        return $this->json(['message' => 'View updated'], 200);
+//    }
+//
+//    #[Route('/view/{id}', name: 'view_delete', methods: ['DELETE'])]
+//    public function delete(int $id, ViewRepository $viewRepository, EntityManagerInterface $entityManager): JsonResponse
+//    {
+//        $view = $viewRepository->find($id);
+//
+//        if (!$view) {
+//            return $this->json(['error' => 'View not found'], 404);
+//        }
+//
+//        $entityManager->remove($view);
+//        $entityManager->flush();
+//
+//        return $this->json(['message' => 'View deleted'], 200);
+//    }
 
-        if (!$view) {
-            return $this->json(['error' => 'View not found'], 404);
-        }
 
-        $data = json_decode($request->getContent(), true);
-
-        $view->setPageViews($data['pageViews'] ?? null);
-        $view->setPhoneViews($data['phoneViews'] ?? null);
-
-        $entityManager->flush();
-
-        return $this->json(['message' => 'View updated'], 200);
-    }
-
-    #[Route('/view/{id}', name: 'view_delete', methods: ['DELETE'])]
-    public function delete(int $id, ViewRepository $viewRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $view = $viewRepository->find($id);
-
-        if (!$view) {
-            return $this->json(['error' => 'View not found'], 404);
-        }
-
-        $entityManager->remove($view);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'View deleted'], 200);
-    }
-
-
+    // Первый вариант реализации с данными
     //    #[Route('/views', name: 'view_list', methods: ['GET'])]
 //    public function entityList(): JsonResponse
 //    {
