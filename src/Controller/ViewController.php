@@ -5,7 +5,8 @@ namespace App\Controller;
 use App\Entity\View;
 use App\Repository\ViewRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
+//use Doctrine\ORM\Mapping\Entity;
+//use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,61 +14,51 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ViewController extends AbstractController
 {
-    private ManagerRegistry $doctrine;
+    private EntityManagerInterface $entityManager;
+    private ViewRepository $viewRepository;
 
-    public function __construct(ManagerRegistry $doctrine)
+    public function __construct(EntityManagerInterface $entityManager, ViewRepository $viewRepository)
     {
-        $this->doctrine = $doctrine;
+        $this->entityManager = $entityManager;
+        $this->viewRepository = $viewRepository;
     }
+
 
     #[Route('/views', name: 'view_list', methods: ['GET'])]
-    public function entityList(ViewRepository $viewRepository): JsonResponse
+    public function index(): JsonResponse
     {
-//        $viewRepository = $this->doctrine->getRepository(View::class);
-//        $views = $viewRepository->findAll();
-//        return $this->json($views);
+        $views = $this->viewRepository->findAll();
 
-        $jsonData = [
-            ['id' => 1, 'pageViews' => 100, 'phoneViews' => 50],
-            ['id' => 2, 'pageViews' => 200, 'phoneViews' => 70],
-            ['id' => 3, 'pageViews' => 150, 'phoneViews' => 40],
-        ];
-        return $this->json($jsonData);
+        foreach ($views as $view) {
+            $pageViews[] = [
+                'id' => $view->getId(),
+                'page_views' => $view->getPageViews(),
+                'phone_views' => $view->getPhoneViews(),
+            ];
+        }
+
+        return $this->json([
+            'page_views' => $pageViews
+        ]);
     }
 
-
-//    #[Route('/view/{id}', name: 'view_show')]
-//    public function show(int $id, ViewRepository $viewRepository): Response
-//    {
-//        $pageViews = $viewRepository->getPageViewsById($id);
-//        $phoneViews = $viewRepository->getPhoneViewsById($id);
-//
-//        return $this->render('view/show.html.twig', [
-//            'pageViews' => $pageViews,
-//            'phoneViews' => $phoneViews,
-//        ]);
-//    }
-
     #[Route('/view/{id}', name: 'view_show', methods: ['GET'])]
-    public function show(int $id, ViewRepository $viewRepository): JsonResponse
+    public function show(int $id): JsonResponse
     {
-//        $view = $viewRepository->find($id);
-//        if (!$view) {
-//            return $this->json(['error' => 'View not found'], 404);
-//        }
-//        return $this->json($view);
+        $view = $this->viewRepository->find($id);
 
-        $jsonData = [
-            'id' => $id,
-            'pageViews' => rand(10, 100),
-            'phoneViews' => rand(5, 50),
-        ];
+        if (!$view) {
+            return $this->json(['error' => 'View not found'], 404);
+        }
+        return $this->json([
+            'page_view' => $view->getPhoneViews(),
+            'phone_view' => $view->getPageViews(),
+        ]);
 
-        return $this->json($jsonData);
     }
 
     #[Route('/views', name: 'views_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -75,13 +66,41 @@ class ViewController extends AbstractController
         $view->setPageViews($data['pageViews'] ?? null);
         $view->setPhoneViews($data['phoneViews'] ?? null);
 
-        $entityManager->persist($view);
-        $entityManager->flush();
+        $this->entityManager->persist($view);
+        $this->entityManager->flush();
 
         return $this->json(['message' => 'View created', 'id' => $view->getId()], 201);
     }
 
-//    #[Route('/view/{id}', name: 'view_update', methods: ['PUT'])]
+    #[Route('/project/entity/{id}', name: 'save_views', methods: ['POST'])]
+    public function saveViews(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $entity = $entityManager->getRepository(Entity::class)->find($id);
+
+        if (!$entity) {
+            return $this->json(['error' => 'Entity not found'], 404);
+        }
+
+        $nbViews = $entity->getNbViews();
+        $nbPhoneViews = $entity->getNbPhoneViews();
+
+        $nbViews += $data['nb_views'] ?? 0;
+        $nbPhoneViews += $data['nb_phone_views'] ?? 0;
+
+        $entity->setNbViews($nbViews);
+        $entity->setNbPhoneViews($nbPhoneViews);
+
+        $entityManager->flush();
+
+        return $this->json(['data' => [
+            'nb_views' => $nbViews,
+            'nb_phone_views' => $nbPhoneViews
+        ]]);
+    }
+
+    //    #[Route('/view/{id}', name: 'view_update', methods: ['PUT'])]
 //    public function update(Request $request, int $id, ViewRepository $viewRepository, EntityManagerInterface $entityManager): JsonResponse
 //    {
 //        $view = $viewRepository->find($id);
@@ -114,7 +133,6 @@ class ViewController extends AbstractController
 //
 //        return $this->json(['message' => 'View deleted'], 200);
 //    }
-
 
     // Первый вариант реализации с данными
     //    #[Route('/views', name: 'view_list', methods: ['GET'])]
