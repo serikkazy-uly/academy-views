@@ -16,17 +16,17 @@ class ViewRepository extends ServiceEntityRepository
         parent::__construct($registry, View::class);
     }
 
-//        public function getPageViewsById(int $id): ?int
-//        {
-//            $view = $this->find($id);
-//            return $view ? $view->getPageViews() : null;
-//
-//        }
-//
-//    public function getPhoneViewsById(int $id): ?int
-//    {
-//        $view = $this->find($id);
-//        return $view ? $view->getPhoneViews() : null;
-//
-//    }
+        public function getPageViewsById(int $id): ?int
+        {
+            $view = $this->find($id);
+            return $view ? $view->getPageViews() : null;
+
+        }
+
+    public function getPhoneViewsById(int $id): ?int
+    {
+        $view = $this->find($id);
+        return $view ? $view->getPhoneViews() : null;
+
+    }
 }
