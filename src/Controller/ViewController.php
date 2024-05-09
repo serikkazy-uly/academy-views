@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\EntityViewCounts;
 use App\Entity\View;
 use App\Repository\ViewRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +29,7 @@ class ViewController extends AbstractController
     {
         $views = $this->viewRepository->findAll();
 
-        $viewsData = array_map(function($view) {
+        $viewsData = array_map(function ($view) {
             return $view->toArray();
         }, $views);
 
@@ -37,7 +38,7 @@ class ViewController extends AbstractController
         ]);
     }
 
-    #[Route('/view/{entityType}/{entityId}', name: 'view_show', methods: ['GET'])]
+    #[Route('/views/{entityType}/{entityId}', name: 'view_show', methods: ['GET'])]
     public function getView(string $entityType, int $entityId): JsonResponse
     {
 //        $view = $this->viewRepository->find($id);
@@ -54,20 +55,49 @@ class ViewController extends AbstractController
         ]);
     }
 
-    #[Route('/views', name: 'views_create', methods: ['POST'])]
-    public function saveViews(Request $request): JsonResponse
+    #[Route('/views/{entityType}/{entityId}', name: 'views_create', methods: ['POST'])]
+    public function saveViews(Request $request, string $entityType, int $entityId): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $view = new View();
-        $view->setEntityId($data['entityId'] ?? null);
-        $view->setEntityType($data['entityType'] ?? null);
+
+        $view = $this->entityManager->getRepository(EntityViewCounts::class)->findOneBy([
+            'entityType' => $entityType,
+            'entityId' => $entityId]);
+
+        if (!$view) {
+            $view = new EntityViewCounts();
+            $view->setEntityId($entityId);
+            $view->setEntityType($entityType);
+        }
+
         $view->setPageViews($data['pageViews'] ?? null);
         $view->setPhoneViews($data['phoneViews'] ?? null);
+
         $this->entityManager->persist($view);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'View created', 'id' => $view->getId()], 201);
+        return $this->json(['message' => 'View updated', 'data' => [
+            'pageViews' => $view->getPageViews(),
+            'phoneViews' => $view->getPhoneViews()
+        ]], 201);
     }
+
+
+
+//    #[Route('/views/{entityType}/{entityId}', name: 'views_create', methods: ['POST'])]
+//    public function saveViews(Request $request, string $entityType, int $entityId): JsonResponse
+//    {
+//        $data = json_decode($request->getContent(), true);
+//        $view = new View();
+//        $view->setEntityId($data['entityId'] ?? null);
+//        $view->setEntityType($data['entityType'] ?? null);
+//        $view->setPageViews($data['pageViews'] ?? null);
+//        $view->setPhoneViews($data['phoneViews'] ?? null);
+//        $this->entityManager->persist($view);
+//        $this->entityManager->flush();
+//
+//        return $this->json(['message' => 'View created', 'id' => $view->getId()], 201);
+//    }
 
 //    #[Route('/views/{id}/periods/', name: 'view_period_statistics', methods: ['GET'])]
 //    public function getViewsStatistics(Request $request, int $id): JsonResponse
