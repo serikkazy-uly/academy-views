@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\EntityViewCount;
+use App\Entity\EntityViewCounts;
 use App\Entity\View;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -13,7 +15,7 @@ class ViewRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, View::class);
+        parent::__construct($registry, EntityViewCounts::class);
     }
 
     //    /**

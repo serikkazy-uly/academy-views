@@ -6,7 +6,7 @@ use App\Repository\ViewRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ViewRepository::class)]
-class EntityViewCount
+class EntityViewCounts
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
