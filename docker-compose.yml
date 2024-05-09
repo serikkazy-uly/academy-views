@@ -21,16 +21,6 @@ services:
     build: ./docker/php
     volumes:
       - ./:/code
-#    environment:
-#      REDIS_HOST: redis
-#      MYSQL_HOST: mysql
-#      MYSQL_PORT: 3306
-#      MYSQL_PASSWORD: secret
-#      MYSQL_DATABASE: views
-#      MYSQL_USER: user
-#    links:
-#      - mysql
-#      - redis
 
   # MySQL
   mysql:
@@ -40,7 +30,7 @@ services:
     environment:
         MYSQL_ROOT_PASSWORD: secret
         MYSQL_DATABASE: views
-        MYSQL_USER: root
+        MYSQL_USER: user
         MYSQL_PASSWORD: secret
     volumes:
         - database:/var/lib/mysql
