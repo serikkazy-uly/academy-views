@@ -18,28 +18,43 @@ class ViewRepository extends ServiceEntityRepository
         parent::__construct($registry, EntityViewCounts::class);
     }
 
-    //    /**
-    //     * @return View[] Returns an array of View objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function getTotalViewsByPeriod(int $entityId, string $from, string $to): array
+    {
+        return $this->createQueryBuilder('v')
+            ->select('SUM(v.pageViews) as page_sum, SUM(v.phoneViews) as phone_sum')
+            ->andWhere('v.entityId = :entityId')
+            ->andWhere('v.created BETWEEN :from AND :to')
+            ->setParameter('entityId', $entityId)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('v.entityId')
+            ->getQuery()
+            ->getSingleResult();
+    }
 
-    //    public function findOneBySomeField($value): ?View
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+//    public function getTotalViewsByPeriod(int $entityId, string $from, string $to): array
+//    {
+//        $this->createQueryBuilder('v')
+//            ->select('SUM(v.pageViews) as page_sum, SUM(v.phoneViews) as phone_sum')
+//            ->andWhere('v.entityId = :entityId')
+//            ->andWhere('v.created BETWEEN :from AND :to')
+//            ->setParameter('entityId', $entityId)
+//            ->setParameter('from', $from)
+//            ->setParameter('to', $to)
+//            ->getQuery('v.entityID')
+//            ->getQuery()
+//            ->getSingleScalarResult();
+//    }
+
+    public function getPageViewsById(int $id): ?int
+    {
+        $view = $this->find($id);
+        return $view ? $view->getPageViews() : null;
+    }
+
+    public function getPhoneViewsById(int $id): ?int
+    {
+        $view = $this->find($id);
+        return $view ? $view->getPhoneViews() : null;
+    }
 }
