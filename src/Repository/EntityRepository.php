@@ -16,7 +16,7 @@ class EntityRepository extends ServiceEntityRepository
         parent::__construct($registry, EntityViewCounts::class);
     }
 
-    public function updateViewCounts( string $project, string $entity, int $id, int $pageViews, int $phoneViews): EntityViewCounts
+    public function updateViewCounts(string $project, string $entity, int $id, int $pageViews, int $phoneViews): EntityViewCounts
     {
         $currentDate = new \DateTime();
 
@@ -45,6 +45,44 @@ class EntityRepository extends ServiceEntityRepository
         return $viewCount;
     }
 
+    public function findViewCounts(string $project, string $entity, int $id): ?EntityViewCounts
+    {
+        return $this->findOneBy(['project' => $project, 'entity' => $entity, 'entityId' => $id]);
+    }
+
+    public function findViewStatistics(int $id, string $project, string $entity, string $fromDate, string $toDate): array
+    {
+        $qb = $this->createQueryBuilder('e');
+        $qb->select('SUM(e.pageViews) as pageViews', 'SUM(e.phoneViews) as phoneViews')
+            ->where('e.entityId = :entityId')
+            ->andWhere('e.project = :project')
+            ->andWhere('e.entity = :entity')
+            ->andWhere('e.date BETWEEN :fromDate AND :toDate')
+            ->setParameter('entityId', $id)
+            ->setParameter('project', $project)
+            ->setParameter('entity', $entity)
+            ->setParameter('fromDate', new \DateTime($fromDate))
+            ->setParameter('toDate', new \DateTime($toDate))
+            ->groupBy('e.entityId');
+
+        $result = $qb->getQuery()->getOneOrNullResult();
+
+        if (!$result) {
+            return [
+                'page_views' => 0,
+                'phone_views' => 0
+            ];
+        }
+
+        return [
+            'page_views' => (int)$result['pageViews'],
+            'phone_views' => (int)$result['phoneViews']
+        ];
+    }
+}
+
+// First variant realization (below):
+
 //    public function findViewCountsByDate(string $project, string $entity, int $id, \DateTimeInterface $startDate, \DateTimeInterface $endDate): array
 //    {
 //        return $this->createQueryBuilder('e')
@@ -66,27 +104,50 @@ class EntityRepository extends ServiceEntityRepository
 //        return $this->findOneBy(['entityId' => $entityId]);
 //    }
 
-    public function findViewCounts(string $project, string $entity, int $id): ?EntityViewCounts
-    {
-        return $this->findOneBy(['project' => $project, 'entity' => $entity, 'entityId' => $id]);
-    }
+//    public function findViewStatistics(int $id, string $project, string $entity, \DateTimeInterface $startDate, \DateTimeInterface $endDate): array
+//    {
+//        return $this->createQueryBuilder('e')
+//            ->where('e.project = :project')
+//            ->andWhere('e.entity = :entity')
+//            ->andWhere('e.date >= :startDate')
+//            ->andWhere('e.date <= :endDate')
+//            ->setParameter('project', $project)
+//            ->setParameter('entity', $entity)
+//            ->setParameter('startDate', $startDate)
+//            ->setParameter('endDate', $endDate)
+//            ->getQuery()
+//            ->getResult();
+//    }
 
-    public function findViewStatistics(string $project, string $entity, \DateTimeInterface $startDate, \DateTimeInterface $endDate): array
-    {
-        return $this->createQueryBuilder('e')
-            ->where('e.project = :project')
-            ->andWhere('e.entity = :entity')
-            ->andWhere('e.date >= :startDate')
-            ->andWhere('e.date <= :endDate')
-            ->setParameter('project', $project)
-            ->setParameter('entity', $entity)
-            ->setParameter('startDate', $startDate)
-            ->setParameter('endDate', $endDate)
-            ->getQuery()
-            ->getResult();
-    }
-
-
+//    public function findViewStatistics(int $id, string $project, string $entity, string $fromDate, string $toDate): array
+//    {
+//        $qb = $this->createQueryBuilder('e');
+//        $qb->select('SUM(e.pageViews) as pageViews', 'SUM(e.phoneViews) as phoneViews')
+//            ->where('e.entityId = :entityId')
+//            ->andWhere('e.project = :project')
+//            ->andWhere('e.entity = :entity')
+//            ->andWhere('e.date BETWEEN :fromDate AND :toDate')
+//            ->setParameter('entityId', $id)
+//            ->setParameter('project', $project)
+//            ->setParameter('entity', $entity)
+//            ->setParameter('fromDate', new \DateTime($fromDate))
+//            ->setParameter('toDate', new \DateTime($toDate))
+//            ->groupBy('e.entityId');
+//
+//        $result = $qb->getQuery()->getOneOrNullResult();
+//
+//        if (!$result) {
+//            return [
+//                'page_views' => 0,
+//                'phone_views' => 0
+//            ];
+//        }
+//
+//        return [
+//            'page_views' => (int) $result['pageViews'],
+//            'phone_views' => (int) $result['phoneViews']
+//        ];
+//    }
 
 //    public function getTotalViewsByPeriod(int $entityId, string $from, string $to): array
 //    {
@@ -115,16 +176,16 @@ class EntityRepository extends ServiceEntityRepository
 //            ->getQuery()
 //            ->getSingleScalarResult();
 //    }
+//}
 
-    public function getPageViewsById(int $id): ?int
-    {
-        $view = $this->find($id);
-        return $view ? $view->getPageViews() : null;
-    }
-
-    public function getPhoneViewsById(int $id): ?int
-    {
-        $view = $this->find($id);
-        return $view ? $view->getPhoneViews() : null;
-    }
-}
+//public function getPageViewsById(int $id): ?int
+//{
+//    $view = $this->find($id);
+//    return $view ? $view->getPageViews() : null;
+//}
+//
+//public function getPhoneViewsById(int $id): ?int
+//{
+//    $view = $this->find($id);
+//    return $view ? $view->getPhoneViews() : null;
+//}

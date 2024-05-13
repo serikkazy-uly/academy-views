@@ -2,12 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\EntityViewCounts;
 use App\Repository\EntityRepository;
-use App\Service\ViewService;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\Entity;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,14 +19,6 @@ class EntityController extends AbstractController
         $this->entityRepository = $entityRepository;
         $this->entityManagerInterface = $entityManager;
     }
-
-
-
-//    public function __construct(EntityManagerInterface $entityManager, EntityRepository $viewRepository)
-//    {
-//        $this->entityManager = $entityManager;
-//        $this->viewRepository = $viewRepository;
-//    }
 
     #[Route('/{project}/{entity}/{id}', methods: ['POST'])]
     public function updateViewCounts(int $id, string $project, string $entity, Request $request, EntityManagerInterface $em): JsonResponse
@@ -60,7 +48,6 @@ class EntityController extends AbstractController
     public function getViewCounts(int $id, string $project, string $entity, EntityManagerInterface $em): JsonResponse
     {
         $viewCount = $this->entityRepository->findViewCounts($project, $entity, $id);
-//dump($entity);die();
         if (!$viewCount) {
             return new JsonResponse(['error' => 'Entity not found'], 404);
         }
@@ -76,86 +63,35 @@ class EntityController extends AbstractController
 
         return new JsonResponse($response, 200);
     }
+
+    #[Route('/{project}/{entity}/{id}/periods/', methods: ['GET'])]
+    public function getStatistics(Request $request, int $id, string $project, string $entity): JsonResponse
+    {
+        $periods = $request->query->all()['period'] ?? [];
+        if (empty($periods)) {
+            return new JsonResponse(['error' => 'No periods provided'], 400);
+        }
+
+        $statistics = [];
+
+        foreach ($periods as $periodName => $range) {
+            if (isset($range['from']) && isset($range['to'])) {
+                $stats = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
+                $statistics[$periodName] = [
+                    'id' => $id,
+                    'page_views' => $stats['page_views'],
+                    'phone_views' => $stats['phone_views']
+                ];
+            } else {
+                $statistics[$periodName] = ['error' => 'Invalid period of range'];
+            }
+        }
+        return $this->json(['data' => $statistics]);
+    }
 }
 
-//    #[Route('/{project}/{entity}/{id}/views', methods: ['GET'])]
-//    public function getViewCountsByDate(int $id, string $project, string $entity, Request $request, EntityManagerInterface $em): JsonResponse
-//    {
-//        $startDate = $request->query->get('start_date');
-//        $endDate = $request->query->get('end_date');
-//
-//        if (!$startDate || !$endDate) {
-//            return new JsonResponse(['error' => 'Missing required date parameters'], 400);
-//        }
-//
-//        $viewCounts = $this->entityRepository->findViewCountsByDate($project, $entity, $id, new \DateTime($startDate), new \DateTime($endDate));
-//
-//        if (empty($viewCounts)) {
-//            return new JsonResponse(['error' => 'No records found'], 404);
-//        }
-//
-//        $data = [];
-//        foreach ($viewCounts as $viewCount) {
-//            $data[$viewCount->getDate()->format('Y-m-d')] = [
-//                'page_views' => $viewCount->getPageViews(),
-//                'phone_views' => $viewCount->getPhoneViews(),
-//            ];
-//        }
+// First variant realization (below):
 
-//        return new JsonResponse(['data' => $data], 200);
-//    }
-
-
-
-
-
-//    #[Route('/project/entity/{id}', methods: ['GET'])]
-//    public function getViewCount(Request $request, int $id): Response
-//    {
-//        $entity = $request->query->get('type');
-//        if (empty($entity)) {
-//            return $this->json(['error' => 'Entity type is required'], 400);
-//        }
-//
-//        $view = $this->viewService->getViewCounts($id, $entity);
-//
-//        if ($view) {
-//            return $this->json([
-//                'data' => [
-//                    $id => [
-//                        'page_views' => $view->getPageViews(),
-//                        'phone_views' => $view->getPhoneViews()
-//                    ]
-//                ]
-//            ]);
-//        } else {
-//            return $this->json(['error' => 'Entity not found'], 404);
-//        }
-//    }
-
-//    #[Route('/project/entity/{id}/periods/', methods: ['GET'])]
-//    public function getStatistics(Request $request, int $id): Response
-//    {
-//        $entity = $request->query->get('type');
-//        if (empty($entity)) {
-//            return $this->json(['error' => 'Entity type is required'], 400);
-//        }
-//
-//        $periods = $request->query->get('period', []);
-//
-//        $statistics = [];
-//
-//        foreach ($periods as $periodName => $range) {
-//            if (isset($range['from']) && isset($range['to'])) {
-//                $statistics[$periodName] = $this->viewService->getStatistics($id, $entity, $range['from'], $range['to']);
-//            } else {
-//                $statistics[$periodName] = ['error' => 'Invalid period range'];
-//            }
-//        }
-//
-//        return $this->json(['data' => $statistics]);
-//    }
-//
 //    #[Route('/project/entity/bulk/', methods: ['POST'])]
 //    public function updateViewsBulk(Request $request): Response
 //    {
@@ -357,16 +293,3 @@ class EntityController extends AbstractController
 //    }
 //}
 
-//    #[Route('/views', name: 'view_list', methods: ['GET'])]
-//    public function getViews(): JsonResponse
-//    {
-//        $views = $this->viewRepository->findAll();
-//
-//        $viewsData = array_map(function ($view) {
-//            return $view->toArray();
-//        }, $views);
-//
-//        return $this->json([
-//            'views' => $viewsData
-//        ]);
-//    }
