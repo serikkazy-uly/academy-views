@@ -28,6 +28,7 @@ class EntityViewCounts
 
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTimeInterface $date = null;
+
     #[ORM\Column(type: 'string', length: 255, nullable: false)]
     private string $project;
 
