@@ -2,12 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\ViewRepository;
+use App\Repository\EntityRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ViewRepository::class)]
+#[ORM\Entity(repositoryClass: EntityRepository::class)]
 class EntityViewCounts
 {
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -17,13 +18,18 @@ class EntityViewCounts
     private ?int $entityId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $entityType = null;
+    private ?string $entity = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $pageViews = null;
+    private ?int $pageViews = 0;
 
     #[ORM\Column(nullable: true)]
-    private ?int $phoneViews = null;
+    private ?int $phoneViews = 0;
+
+    #[ORM\Column(type: 'date', nullable: true)]
+    private ?\DateTimeInterface $date = null;
+    #[ORM\Column(type: 'string', length: 255, nullable: false)]
+    private string $project;
 
     public function getId(): ?int
     {
@@ -35,21 +41,21 @@ class EntityViewCounts
         return $this->entityId;
     }
 
-    public function setEntityId(?int $entityId): static
+    public function setEntityId(?int $entityId): self
     {
         $this->entityId = $entityId;
 
         return $this;
     }
 
-    public function getEntityType(): ?string
+    public function getEntity(): ?string
     {
-        return $this->entityType;
+        return $this->entity;
     }
 
-    public function setEntityType(?string $entityType): static
+    public function setEntity(?string $entity): self
     {
-        $this->entityType = $entityType;
+        $this->entity = $entity;
 
         return $this;
     }
@@ -59,7 +65,7 @@ class EntityViewCounts
         return $this->pageViews;
     }
 
-    public function setPageViews(?int $pageViews): static
+    public function setPageViews(?int $pageViews): self
     {
         $this->pageViews = $pageViews;
 
@@ -71,10 +77,31 @@ class EntityViewCounts
         return $this->phoneViews;
     }
 
-    public function setPhoneViews(?int $phoneViews): static
+    public function setPhoneViews(?int $phoneViews): self
     {
         $this->phoneViews = $phoneViews;
 
         return $this;
+    }
+
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->date;
+    }
+
+    public function setDate(?\DateTimeInterface $date): self
+    {
+        $this->date = $date;
+        return $this;
+    }
+
+    public function setProject(string $project): self
+    {
+        $this->project = $project;
+        return $this;
+    }
+    public  function getProject(): string
+    {
+        return $this->project;
     }
 }
