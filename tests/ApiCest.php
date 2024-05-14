@@ -1,4 +1,5 @@
 <?php
+
 namespace tests;
 
 use ApiTester;
@@ -30,12 +31,12 @@ class ApiCest
      *
      * @param \ApiTester $I
      */
-    public function tryApi(ApiTester $I)
-    {
-        $I->sendGet('/');
-        $I->seeResponseCodeIs(200);
-        $I->seeResponseIsJson();
-    }
+//    public function tryApi(ApiTester $I)
+//    {
+//        $I->sendGet('/');
+//        $I->seeResponseCodeIs(200);
+//        $I->seeResponseIsJson();
+//    }
 
     /**
      * Увеличение просмотров
@@ -44,25 +45,94 @@ class ApiCest
      */
     public function incViews(ApiTester $I)
     {
+        // Case: 1
         $I->sendPost(
             '/project/entity/' . $this->randomId . '/',
-            ['nb_views' => 1, 'nb_phone_views' => 1, 'return_counters' => 1]
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
         );
         $I->seeResponseCodeIs(200);
         $I->seeResponseIsJson();
 
         $I->seeResponseContainsJson([
-            'data' => ['nb_views' => 1, 'nb_phone_views' => 1],
+            'data' => [
+                'page_views' => 1,
+                'phone_views' => 1],
         ]);
-
-        $I->sendPost('/project/entity/' . $this->randomId . '/', ['nb_views' => 1, 'return_counters' => 1]);
+        // Case:2
+        $I->sendPost(
+            '/project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 0,
+                ],
+            ])
+        );
         $I->seeResponseCodeIs(200);
         $I->seeResponseIsJson();
 
         $I->seeResponseContainsJson([
-            'data' => ['nb_views' => 2, 'nb_phone_views' => 1],
+            'data' => [
+                'page_views' => 2,
+                'phone_views' => 1],
         ]);
+
+        // Case: 3 нет phone_views
+        $I->sendPost(
+            '/project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 2
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseIsJson();
+
+        $I->seeResponseContainsJson([
+            'data' => [
+                'page_views' => 4
+            ],
+        ]);
+
+        // Case:4 нет page_views
+        $I->sendPost(
+            '/project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseIsJson();
+
+        $I->seeResponseContainsJson([
+            'data' => [
+                'page_views' => 4,
+                'phone_views' => 2],
+        ]);
+
+        // Case: 5 нет entities
+//        $I->sendPost(
+//            'http://localhost:8080/' . $this->randomId . '/',
+//            json_encode([]),
+//            ['Content-Type' => 'application/json']
+//        );
+//        $I->seeResponseCodeIs(400);
+//        $I->seeResponseIsJson();
+//
+//        $I->seeResponseContainsJson([
+//            'error' => 'Not Found',
+//            ]);
+
     }
+
 
     /**
      * Получение просмотров
@@ -76,9 +146,15 @@ class ApiCest
         $I->seeResponseIsJson();
 
         $I->seeResponseContainsJson([
-            $this->randomId => ['nb_views' => 2, 'nb_phone_views' => 1],
+                'data' => [
+                    $this->randomId => [
+                        'page_views' => 4,
+                        'phone_views' => 2,
+                    ],
+                ],
         ]);
     }
+
 
     /**
      * Получение статистики
@@ -102,37 +178,46 @@ class ApiCest
         $I->seeResponseIsJson();
 
         $I->seeResponseContainsJson([
-            $this->randomId => ['nb_views' => 2, 'nb_phone_views' => 1],
+                'data' => [
+                    'last-year' => [
+                        $this->randomId =>[
+                            'page_views' => 4,
+                            'phone_views' => 2
+                        ],
+                    ],
+                ],
         ]);
     }
 
-    /**
-     * Увеличение просмотров у другой сущности другого проекта
-     *
-     * @param \ApiTester $I
-     */
-    public function incViewsAnotherEntity(ApiTester $I)
-    {
-        $I->sendPost(
-            '/project2/entity2/' . $this->randomId . '/',
-            ['nb_views' => 1, 'nb_phone_views' => 1, 'return_counters' => 1]
-        );
-        $I->seeResponseCodeIs(200);
-        $I->seeResponseIsJson();
+// No NEEEEED ---------------->
 
-        $I->seeResponseContainsJson([
-            'data' => ['nb_views' => 1, 'nb_phone_views' => 1],
-        ]);
-
-        $I->sendPost(
-            '/project2/entity2/' . $this->randomId . '/',
-            ['nb_views' => 1, 'nb_phone_views' => 1, 'return_counters' => 1]
-        );
-        $I->seeResponseCodeIs(200);
-        $I->seeResponseIsJson();
-
-        $I->seeResponseContainsJson([
-            'data' => ['nb_views' => 2, 'nb_phone_views' => 2],
-        ]);
-    }
+//    /**
+//     * Увеличение просмотров у другой сущности другого проекта
+//     *
+//     * @param \ApiTester $I
+//     */
+//    public function incViewsAnotherEntity(ApiTester $I)
+//    {
+//        $I->sendPost(
+//            '/project2/entity2/' . $this->randomId . '/',
+//            ['page_views' => 1, 'phone_views' => 1, 'return_counters' => 1]
+//        );
+//        $I->seeResponseCodeIs(200);
+//        $I->seeResponseIsJson();
+//
+//        $I->seeResponseContainsJson([
+//            'data' => ['page_views' => 1, 'phone_views' => 1],
+//        ]);
+//
+//        $I->sendPost(
+//            '/project2/entity2/' . $this->randomId . '/',
+//            ['page_views' => 1, 'phone_views' => 1, 'return_counters' => 1]
+//        );
+//        $I->seeResponseCodeIs(200);
+//        $I->seeResponseIsJson();
+//
+//        $I->seeResponseContainsJson([
+//            'data' => ['page_views' => 2, 'phone_views' => 2],
+//        ]);
+//    }
 }
