@@ -8,16 +8,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class EntityController extends AbstractController
 {
     private EntityRepository $entityRepository;
     private EntityManagerInterface $entityManager;
+    private CacheInterface $cache;
 
-    public function __construct(EntityRepository $entityRepository, EntityManagerInterface $entityManager)
+    public function __construct(EntityRepository $entityRepository, EntityManagerInterface $entityManager, CacheInterface $cache)
     {
         $this->entityRepository = $entityRepository;
         $this->entityManagerInterface = $entityManager;
+        $this->cache = $cache;
     }
 
     #[Route('/{project}/{entity}/{id}', methods: ['POST'])]
@@ -64,8 +68,10 @@ class EntityController extends AbstractController
         return new JsonResponse($response, 200);
     }
 
+    /* @throws \Psr\Cache\InvalidArgumentException
+     */
     #[Route('/{project}/{entity}/{id}/periods/', methods: ['GET'])]
-    public function getStatistics(Request $request, int $id, string $project, string $entity): JsonResponse
+    public function getStatistics(Request $request, int $id, string $project, string $entity, CacheInterface $cache): JsonResponse
     {
         $periods = $request->query->all()['period'] ?? [];
         if (empty($periods)) {
@@ -76,6 +82,12 @@ class EntityController extends AbstractController
 
         foreach ($periods as $periodName => $range) {
             if (isset($range['from']) && isset($range['to'])) {
+
+//                $cacheKey = sprintf('stats_%s_%s_%d_%s_%s', $project, $entity, $id, $range['from'], $range['to']);
+//                $stats = $cache->get($cacheKey, function (ItemInterface $item) use ($id, $project, $entity, $range) {
+//                    $item->expiresAfter(3600);
+//                    return $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
+//                });
                 $stats = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
                 $statistics[$periodName] = [
                     'id' => $id,
@@ -89,6 +101,9 @@ class EntityController extends AbstractController
         return $this->json(['data' => $statistics]);
     }
 }
+
+
+
 
 // First variant realization (below):
 
