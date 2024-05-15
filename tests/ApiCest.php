@@ -45,6 +45,25 @@ class ApiCest
      */
     public function incViews(ApiTester $I)
     {
+        // Case: 0
+        $I->sendPost(
+            '/project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseIsJson();
+
+        $I->seeResponseContainsJson([
+            'data' => [
+                'page_views' => 1,
+                'phone_views' => 1],
+        ]);
+
         // Case: 1
         $I->sendPost(
             '/project/entity/' . $this->randomId . '/',

@@ -18,10 +18,20 @@ class EntityController extends AbstractController
     }
 
     #[Route('/{project}/{entity}/{id}/', methods: ['POST'])]
-    public function updateViewCounts(?int $id, ?string $project, ?string $entity, Request $request): JsonResponse
+    // requirements: ['id' => '\d*']
+    public function updateViewCounts(int $id, string $project, string $entity, Request $request): JsonResponse
     {
         if (empty($project) || empty($entity) || empty($id)) {
             return new JsonResponse(['error' => 'Missing required route parameters'], 400);
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $project) || !preg_match('/^[a-zA-Z0-9_-]+$/', $entity) ||
+            !filter_var($id, FILTER_VALIDATE_INT)) {
+            return new JsonResponse(['error' => 'Invalid route parameters'], 400);
+        }
+
+        if ($id < 0) {
+            return new JsonResponse(['error' => 'No valid id'], 400);
         }
 
         $res = json_decode($request->getContent(), true);
@@ -30,10 +40,10 @@ class EntityController extends AbstractController
             return new JsonResponse(['error' => 'Missing required parameters'], 400);
         }
 
-        $pageViews = isset($res['data']['page_views']) ? (int)$res['data']['page_views'] : 0;
+        $pageViews  = isset($res['data']['page_views']) ? (int)$res['data']['page_views'] : 0;
         $phoneViews = isset($res['data']['phone_views']) ? (int)$res['data']['phone_views'] : 0;
 
-        $view       = $this->entityRepository->updateViewCounts($project, $entity, $id, $pageViews, $phoneViews);
+        $view = $this->entityRepository->updateViewCounts($project, $entity, $id, $pageViews, $phoneViews);
 
         $response = [
             'data' => [
@@ -77,9 +87,8 @@ class EntityController extends AbstractController
 
         foreach ($periods as $periodName => $range) {
             if (isset($range['from']) && isset($range['to'])) {
-                $stats                   = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
+                $stats                        = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
                 $statistics[$periodName][$id] = [
-//                    'id' => $id,
                     'page_views' => $stats['page_views'],
                     'phone_views' => $stats['phone_views']
                 ];
@@ -90,4 +99,3 @@ class EntityController extends AbstractController
         return new JsonResponse(['data' => $statistics]);
     }
 }
-
