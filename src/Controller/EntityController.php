@@ -100,8 +100,14 @@ class EntityController extends AbstractController
                 $fromDate = \DateTime::createFromFormat('Y-m-d', $range['from']);
                 $toDate   = \DateTime::createFromFormat('Y-m-d', $range['to']);
 
-                if ($fromDate > $toDate) {
-                    return new JsonResponse(['error' => 'The "from" date must be earlier than or equal to the "to" date'], 400);
+                if ($fromDate > $toDate){
+                    return new JsonResponse([
+                        'error' => sprintf('The start date ("%s" from) must be earlier and before the end date ("%s" to)',
+                            $range['from'], $range['to'])], 400);
+                }
+
+                if ($fromDate == $range['to'] || $toDate == $range['from']) {
+                    return new JsonResponse(['error' => 'Invalid date format'], 400);
                 }
 
                 $stats                        = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
@@ -114,7 +120,8 @@ class EntityController extends AbstractController
                 $statistics[$periodName][$id] = ['error' => 'Invalid period of range'];
             }
         }
-        return new JsonResponse(['data' => $statistics]);
+        $response = ['data' => $statistics];
+        return new JsonResponse($response, 200);
     }
 
     private function isValidDate(string $date): bool
