@@ -105,4 +105,9 @@ class EntityViewCounts
         $this->project = $project;
         return $this;
     }
+
+//    public function isValidDate()
+//    {
+//        return $this->getDate() != null && $this->getDate()->format('Y-m-d') == date('Y-m-d');
+//    }
 }

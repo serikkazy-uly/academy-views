@@ -48,12 +48,6 @@ class EntityRepository extends ServiceEntityRepository
 
     public function findViewCounts(string $project, string $entity, int $id): ?array
     {
-//        return $this->findOneBy([
-//            'project' => $project,
-//            'entity' => $entity,
-//            'entityId' => $id
-//        ]);
-
         $qb = $this->createQueryBuilder('e')
             ->select('SUM(e.pageViews) as page_views, SUM(e.phoneViews) as phone_views')
             ->where('e.project = :project')

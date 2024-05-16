@@ -90,32 +90,37 @@ class EntityController extends AbstractController
             return new JsonResponse(['error' => 'No periods provided'], 400);
         }
 
-       // $data = [];
-//            foreach ($viewCounts as $viewCount) {
-//                $data[$viewCount->getDate()->format('Y-m-d')] = [
-//                    'page_views' => $viewCount->getPageViews(),
-//                    'phone_views' => $viewCount->getPhoneViews(),
-//                ];
-//            }
-
-
-
         $statistics = [];
-
-
         foreach ($periods as $periodName => $range) {
-
-
             if (isset($range['from']) && isset($range['to'])) {
+                if (!$this->isValidDate($range['from']) || !$this->isValidDate($range['to'])) {
+                    return new JsonResponse(['error' => 'Invalid date format'], 400);
+                }
+
+                $fromDate = \DateTime::createFromFormat('Y-m-d', $range['from']);
+                $toDate   = \DateTime::createFromFormat('Y-m-d', $range['to']);
+
+                if ($fromDate > $toDate) {
+                    return new JsonResponse(['error' => 'The "from" date must be earlier than or equal to the "to" date'], 400);
+                }
+
                 $stats                        = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
                 $statistics[$periodName][$id] = [
                     'page_views' => $stats['page_views'],
                     'phone_views' => $stats['phone_views']
                 ];
+
             } else {
                 $statistics[$periodName][$id] = ['error' => 'Invalid period of range'];
             }
         }
         return new JsonResponse(['data' => $statistics]);
     }
+
+    private function isValidDate(string $date): bool
+    {
+        $d = \DateTime::createFromFormat('Y-m-d', $date);
+        return $d && $d->format('Y-m-d') === $date;
+    }
+
 }
