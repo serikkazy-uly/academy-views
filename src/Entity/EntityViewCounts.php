@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\EntityRepository;
@@ -8,7 +8,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: EntityRepository::class)]
 class EntityViewCounts
 {
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -96,18 +95,14 @@ class EntityViewCounts
         return $this;
     }
 
-    public  function getProject(): string
+    public function getProject(): string
     {
         return $this->project;
     }
+
     public function setProject(string $project): self
     {
         $this->project = $project;
         return $this;
     }
-
-//    public function isValidDate()
-//    {
-//        return $this->getDate() != null && $this->getDate()->format('Y-m-d') == date('Y-m-d');
-//    }
 }
