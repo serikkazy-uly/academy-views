@@ -9,15 +9,37 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Контроллер для управления просмотрами сущностей.
+ */
 class EntityController extends AbstractController
 {
+    /**
+     * Репозиторий для работы с просмотрами сущностей.
+     *
+     * @var EntityRepository $entityRepository
+     */
     private EntityRepository $entityRepository;
 
+    /**
+     * Конструктор класса.
+     *
+     * @param EntityRepository $entityRepository Репозиторий для работы с просмотрами сущностей.
+     */
     public function __construct(EntityRepository $entityRepository)
     {
         $this->entityRepository = $entityRepository;
     }
 
+    /**
+     *
+     * Метод обновления количества просмотров
+     * @param int $id
+     * @param string $project
+     * @param string $entity
+     * @param Request $request
+     * @return JsonResponse
+     */
     #[Route('/{project}/{entity}/{id}/', methods: ['POST'])]
     public function updateViewCounts(int $id, string $project, string $entity, Request $request): JsonResponse
     {
@@ -55,6 +77,17 @@ class EntityController extends AbstractController
         return new JsonResponse($response);
     }
 
+    /**
+     * Метод получения количества просмотров сущности.
+     *
+     * @Route("/{project}/{entity}/{id}", methods={"GET"})
+     *
+     * @param int    $id      Идентификатор сущности.
+     * @param string $project Название проекта.
+     * @param string $entity  Название сущности.
+     *
+     * @return JsonResponse Возвращает количество просмотров сущности.
+     */
     #[Route('/{project}/{entity}/{id}', methods: ['GET'])]
     public function getViewCounts(int $id, string $project, string $entity): JsonResponse
     {
@@ -83,6 +116,18 @@ class EntityController extends AbstractController
         return new JsonResponse($response);
     }
 
+    /**
+     * Метод получения статистики просмотров сущности за периоды.
+     *
+     * @Route("/{project}/{entity}/{id}/periods/", methods={"GET"})
+     *
+     * @param Request $request Запрос с параметрами периодов.
+     * @param int     $id      Идентификатор сущности.
+     * @param string  $project Название проекта.
+     * @param string  $entity  Название сущности.
+     *
+     * @return JsonResponse Возвращает статистику просмотров за периоды.
+     */
     #[Route('/{project}/{entity}/{id}/periods/', methods: ['GET'])]
     public function getStatistics(Request $request, int $id, string $project, string $entity): JsonResponse
     {
@@ -125,6 +170,12 @@ class EntityController extends AbstractController
         return new JsonResponse(['data' => $statistics]);
     }
 
+    /**
+     * @TODO: Убрать функцию из контроллера и применить готовый компонент валидации
+     *
+     * @param string $date
+     * @return bool
+     */
     private function isValidDate(string $date): bool
     {
         $d = \DateTime::createFromFormat('Y-m-d', $date);
