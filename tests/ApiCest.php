@@ -137,18 +137,75 @@ class ApiCest
                 'phone_views' => 2],
         ]);
 
-        // Case: 5 нет entities
-//        $I->sendPost(
-//            'http://localhost:8080/' . $this->randomId . '/',
-//            json_encode([]),
-//            ['Content-Type' => 'application/json']
-//        );
-//        $I->seeResponseCodeIs(400);
-//        $I->seeResponseIsJson();
-//
-//        $I->seeResponseContainsJson([
-//            'error' => 'Not Found',
-//            ]);
+        //_______________________________ ROUTING HANDLE:
+
+        // Case: 0 - Корректные параметры маршрута
+        $I->sendPost(
+            '/project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'data' => [
+                'page_views' => 1,
+                'phone_views' => 1
+            ],
+        ]);
+
+        // Case: 1 - Некорректный параметр project
+        $I->sendPost(
+            '/invalid!project/entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(400);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'error' => 'Invalid route parameters'
+        ]);
+
+        // Case: 2 - Некорректный параметр entity
+        $I->sendPost(
+            '/project/invalid!entity/' . $this->randomId . '/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(400);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'error' => 'Invalid route parameters'
+        ]);
+
+        // Case: 3 - Некорректный параметр id (не числовое значение)
+        $I->sendPost(
+            '/project/entity/invalid-id/',
+            json_encode([
+                'data' => [
+                    'page_views' => 1,
+                    'phone_views' => 1,
+                ],
+            ])
+        );
+        $I->seeResponseCodeIs(400);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'error' => 'Invalid route parameters'
+        ]);
+
 
     }
 

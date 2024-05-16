@@ -46,9 +46,25 @@ class EntityRepository extends ServiceEntityRepository
         return $viewCount;
     }
 
-    public function findViewCounts(string $project, string $entity, int $id): ?EntityViewCounts
+    public function findViewCounts(string $project, string $entity, int $id): ?array
     {
-        return $this->findOneBy(['project' => $project, 'entity' => $entity, 'entityId' => $id]);
+//        return $this->findOneBy([
+//            'project' => $project,
+//            'entity' => $entity,
+//            'entityId' => $id
+//        ]);
+
+        $qb = $this->createQueryBuilder('e')
+            ->select('SUM(e.pageViews) as page_views, SUM(e.phoneViews) as phone_views')
+            ->where('e.project = :project')
+            ->andWhere('e.entity = :entity')
+            ->andWhere('e.entityId = :id')
+            ->setParameter('project', $project)
+            ->setParameter('entity', $entity)
+            ->setParameter('id', $id)
+            ->getQuery();
+
+        return $qb->getOneOrNullResult();
     }
 
     public function findViewStatistics(int $id, string $project, string $entity, string $fromDate, string $toDate): array

@@ -18,7 +18,6 @@ class EntityController extends AbstractController
     }
 
     #[Route('/{project}/{entity}/{id}/', methods: ['POST'])]
-    // requirements: ['id' => '\d*']
     public function updateViewCounts(int $id, string $project, string $entity, Request $request): JsonResponse
     {
         if (empty($project) || empty($entity) || empty($id)) {
@@ -58,6 +57,14 @@ class EntityController extends AbstractController
     #[Route('/{project}/{entity}/{id}', methods: ['GET'])]
     public function getViewCounts(int $id, string $project, string $entity): JsonResponse
     {
+        if (empty($project) || empty($entity) || empty($id)) {
+            return new JsonResponse(['error' => 'Missing required route parameters'], 400);
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $project) || !preg_match('/^[a-zA-Z0-9_-]+$/', $entity) || !filter_var($id, FILTER_VALIDATE_INT)) {
+            return new JsonResponse(['error' => 'Invalid route parameters'], 400);
+        }
+
         $viewCount = $this->entityRepository->findViewCounts($project, $entity, $id);
         if (!$viewCount) {
             return new JsonResponse(['error' => 'Entity not found'], 404);
@@ -66,8 +73,8 @@ class EntityController extends AbstractController
         $response = [
             'data' => [
                 $id => [
-                    'page_views' => $viewCount->getPageViews(),
-                    'phone_views' => $viewCount->getPhoneViews(),
+                    'page_views' => (int)$viewCount['page_views'],
+                    'phone_views' => (int)$viewCount['phone_views']
                 ],
             ],
         ];
@@ -83,9 +90,22 @@ class EntityController extends AbstractController
             return new JsonResponse(['error' => 'No periods provided'], 400);
         }
 
+       // $data = [];
+//            foreach ($viewCounts as $viewCount) {
+//                $data[$viewCount->getDate()->format('Y-m-d')] = [
+//                    'page_views' => $viewCount->getPageViews(),
+//                    'phone_views' => $viewCount->getPhoneViews(),
+//                ];
+//            }
+
+
+
         $statistics = [];
 
+
         foreach ($periods as $periodName => $range) {
+
+
             if (isset($range['from']) && isset($range['to'])) {
                 $stats                        = $this->entityRepository->findViewStatistics($id, $project, $entity, $range['from'], $range['to']);
                 $statistics[$periodName][$id] = [

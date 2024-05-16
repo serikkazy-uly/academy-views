@@ -96,13 +96,13 @@ class EntityViewCounts
         return $this;
     }
 
+    public  function getProject(): string
+    {
+        return $this->project;
+    }
     public function setProject(string $project): self
     {
         $this->project = $project;
         return $this;
-    }
-    public  function getProject(): string
-    {
-        return $this->project;
     }
 }
