@@ -8,15 +8,32 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * Класс для работы с сущностями
  * @extends ServiceEntityRepository<EntityViewCounts>
  */
 class EntityRepository extends ServiceEntityRepository
 {
+    /**
+     * Конструктор класса.
+     *
+     * @param ManagerRegistry $registry Реестр менеджеров для работы с сущностями.
+     */
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, EntityViewCounts::class);
     }
 
+    /**
+     * Метод обновления количества просмотров для сущностей.
+     *
+     * @param string $project    Название проекта.
+     * @param string $entity     Название сущности.
+     * @param int    $id         Идентификатор сущности.
+     * @param int    $pageViews  Количество просмотров страницы.
+     * @param int    $phoneViews Количество просмотров телефона.
+     *
+     * @return EntityViewCounts Возвращает обновленную сущность просмотра.
+     */
     public function updateViewCounts(string $project, string $entity, int $id, int $pageViews, int $phoneViews): EntityViewCounts
     {
         $currentDate = new \DateTime();
@@ -47,6 +64,15 @@ class EntityRepository extends ServiceEntityRepository
         return $viewCount;
     }
 
+    /**
+     * Метод нахождения количества просмотров для сущностей.
+     *
+     * @param string $project Название проекта.
+     * @param string $entity  Название сущности.
+     * @param int    $id      Идентификатор сущности.
+     *
+     * @return array|null Возвращает массив с суммарными значениями просмотров или null, если сущность не найдена.
+     */
     public function findViewCounts(string $project, string $entity, int $id): ?array
     {
         $qb = $this->createQueryBuilder('e')
@@ -62,6 +88,17 @@ class EntityRepository extends ServiceEntityRepository
         return $qb->getOneOrNullResult();
     }
 
+    /*
+     * Метод нахождения статистики просмотров для сущности за указанный период.
+     *
+     * @param int    $id        Идентификатор сущности.
+     * @param string $project   Название проекта.
+     * @param string $entity    Название сущности.
+     * @param string $fromDate  Дата начала периода (включительно).
+     * @param string $toDate    Дата окончания периода (включительно).
+     *
+     * @return array Возвращает массив с суммарными значениями просмотров за период.
+     */
     public function findViewStatistics(int $id, string $project, string $entity, string $fromDate, string $toDate): array
     {
         $qb = $this->createQueryBuilder('e');

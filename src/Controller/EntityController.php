@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Repository\EntityRepository;
@@ -82,9 +83,9 @@ class EntityController extends AbstractController
      *
      * @Route("/{project}/{entity}/{id}", methods={"GET"})
      *
-     * @param int    $id      Идентификатор сущности.
+     * @param int $id Идентификатор сущности.
      * @param string $project Название проекта.
-     * @param string $entity  Название сущности.
+     * @param string $entity Название сущности.
      *
      * @return JsonResponse Возвращает количество просмотров сущности.
      */
@@ -122,9 +123,9 @@ class EntityController extends AbstractController
      * @Route("/{project}/{entity}/{id}/periods/", methods={"GET"})
      *
      * @param Request $request Запрос с параметрами периодов.
-     * @param int     $id      Идентификатор сущности.
-     * @param string  $project Название проекта.
-     * @param string  $entity  Название сущности.
+     * @param int $id Идентификатор сущности.
+     * @param string $project Название проекта.
+     * @param string $entity Название сущности.
      *
      * @return JsonResponse Возвращает статистику просмотров за периоды.
      */
@@ -146,7 +147,7 @@ class EntityController extends AbstractController
                 $fromDate = \DateTime::createFromFormat('Y-m-d', $range['from']);
                 $toDate   = \DateTime::createFromFormat('Y-m-d', $range['to']);
 
-                if ($fromDate > $toDate){
+                if ($fromDate > $toDate) {
                     return new JsonResponse([
                         'error' => sprintf('The start date ("%s" from) must be earlier and before the end date ("%s" to)',
                             $range['from'], $range['to'])], Response::HTTP_BAD_REQUEST);
