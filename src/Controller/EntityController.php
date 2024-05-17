@@ -3,12 +3,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\DateValidator;
 use App\Repository\EntityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+//use Symfony\Component\Validator\Validator\ValidatorInterface;
+
 
 /**
  * Контроллер для управления просмотрами сущностей.
@@ -27,9 +30,18 @@ class EntityController extends AbstractController
      *
      * @param EntityRepository $entityRepository Репозиторий для работы с просмотрами сущностей.
      */
-    public function __construct(EntityRepository $entityRepository)
+
+    /**
+     * Сервис для валидации даты.
+     *
+     * @var DateValidator $dateValidator
+     */
+    private DateValidator $dateValidator;
+
+    public function __construct(EntityRepository $entityRepository, DateValidator $dateValidator)
     {
         $this->entityRepository = $entityRepository;
+        $this->dateValidator = $dateValidator;
     }
 
     /**
@@ -140,7 +152,7 @@ class EntityController extends AbstractController
         $statistics = [];
         foreach ($periods as $periodName => $range) {
             if (isset($range['from']) && isset($range['to'])) {
-                if (!$this->isValidDate($range['from']) || !$this->isValidDate($range['to'])) {
+                if (!$this->dateValidator->isValidDate($range['from']) || !$this->dateValidator->isValidDate($range['to'])) {
                     return new JsonResponse(['error' => 'Invalid date format'], Response::HTTP_BAD_REQUEST);
                 }
 
@@ -169,19 +181,6 @@ class EntityController extends AbstractController
         }
 
         return new JsonResponse(['data' => $statistics]);
-    }
-
-    /**
-     * @TODO: Убрать функцию из контроллера и применить готовый компонент валидации
-     *
-     * @param string $date
-     * @return bool
-     */
-    private function isValidDate(string $date): bool
-    {
-        $d = \DateTime::createFromFormat('Y-m-d', $date);
-
-        return $d && $d->format('Y-m-d') === $date;
     }
 
 }
