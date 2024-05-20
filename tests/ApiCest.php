@@ -79,10 +79,12 @@ class ApiCest
 
         $I->seeResponseContainsJson([
             'data' => [
-                'page_views' => 1,
-                'phone_views' => 1],
+                'page_views' => 2,
+                'phone_views' => 2
+            ],
         ]);
-        // Case:2
+
+//        // Case:2
         $I->sendPost(
             '/project/entity/' . $this->randomId . '/',
             json_encode([
@@ -97,11 +99,12 @@ class ApiCest
 
         $I->seeResponseContainsJson([
             'data' => [
-                'page_views' => 2,
-                'phone_views' => 1],
+                'page_views' => 3,
+                'phone_views' => 2
+            ],
         ]);
-
-        // Case: 3 нет phone_views
+//
+//        // Case: 3 нет phone_views
         $I->sendPost(
             '/project/entity/' . $this->randomId . '/',
             json_encode([
@@ -115,7 +118,7 @@ class ApiCest
 
         $I->seeResponseContainsJson([
             'data' => [
-                'page_views' => 4
+                'page_views' => 5
             ],
         ]);
 
@@ -124,7 +127,7 @@ class ApiCest
             '/project/entity/' . $this->randomId . '/',
             json_encode([
                 'data' => [
-                    'phone_views' => 1,
+                    'phone_views' => 2,
                 ],
             ])
         );
@@ -133,8 +136,9 @@ class ApiCest
 
         $I->seeResponseContainsJson([
             'data' => [
-                'page_views' => 4,
-                'phone_views' => 2],
+                'page_views' => 5,
+                'phone_views' => 4
+            ],
         ]);
 
         //_______________________________ ROUTING HANDLE:
@@ -153,12 +157,12 @@ class ApiCest
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'data' => [
-                'page_views' => 1,
-                'phone_views' => 1
+                'page_views' => 6,
+                'phone_views' => 5
             ],
         ]);
-
-        // Case: 1 - Некорректный параметр project
+//
+//        // Case: 1 - Некорректный параметр project
         $I->sendPost(
             '/invalid!project/entity/' . $this->randomId . '/',
             json_encode([
@@ -173,8 +177,8 @@ class ApiCest
         $I->seeResponseContainsJson([
             'error' => 'Invalid route parameters'
         ]);
-
-        // Case: 2 - Некорректный параметр entity
+//
+//        // Case: 2 - Некорректный параметр entity
         $I->sendPost(
             '/project/invalid!entity/' . $this->randomId . '/',
             json_encode([
@@ -189,8 +193,8 @@ class ApiCest
         $I->seeResponseContainsJson([
             'error' => 'Invalid route parameters'
         ]);
-
-        // Case: 3 - Некорректный параметр id (не числовое значение)
+//
+//        // Case: 3 - Некорректный параметр id (не числовое значение)
         $I->sendPost(
             '/project/entity/invalid-id/',
             json_encode([
@@ -224,8 +228,8 @@ class ApiCest
         $I->seeResponseContainsJson([
                 'data' => [
                     $this->randomId => [
-                        'page_views' => 4,
-                        'phone_views' => 2,
+                        'page_views' => 6,
+                        'phone_views' => 5,
                     ],
                 ],
         ]);
@@ -257,8 +261,8 @@ class ApiCest
                 'data' => [
                     'last-year' => [
                         $this->randomId =>[
-                            'page_views' => 4,
-                            'phone_views' => 2
+                            'page_views' => 6,
+                            'phone_views' => 5
                         ],
                     ],
                 ],

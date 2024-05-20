@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-//use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 
 /**
@@ -20,42 +20,34 @@ class EntityController extends AbstractController
 {
     /**
      * Репозиторий для работы с просмотрами сущностей.
-     *
-     * @var EntityRepository $entityRepository
      */
     private EntityRepository $entityRepository;
 
     /**
-     * Конструктор класса.
-     *
-     * @param EntityRepository $entityRepository Репозиторий для работы с просмотрами сущностей.
-     */
-
-    /**
      * Сервис для валидации даты.
-     *
-     * @var DateValidator $dateValidator
      */
     private DateValidator $dateValidator;
 
+    /**
+     * Конструктор класса.
+     */
     public function __construct(EntityRepository $entityRepository, DateValidator $dateValidator)
     {
         $this->entityRepository = $entityRepository;
-        $this->dateValidator = $dateValidator;
+        $this->dateValidator    = $dateValidator;
     }
 
     /**
-     *
      * Метод обновления количества просмотров
-     * @param int $id
-     * @param string $project
-     * @param string $entity
-     * @param Request $request
-     * @return JsonResponse
      */
     #[Route('/{project}/{entity}/{id}/', methods: ['POST'])]
-    public function updateViewCounts(int $id, string $project, string $entity, Request $request): JsonResponse
+    public function updateViewCounts($id, string $project, string $entity, Request $request): JsonResponse
     {
+        if (!ctype_digit($id)) {
+            return new JsonResponse(['error' => 'Invalid route parameters'], Response::HTTP_BAD_REQUEST);
+        }
+        $id = (int)$id;
+
         if (empty($project) || empty($entity) || empty($id)) {
             return new JsonResponse(['error' => 'Missing required route parameters'], Response::HTTP_BAD_REQUEST);
         }
@@ -92,14 +84,6 @@ class EntityController extends AbstractController
 
     /**
      * Метод получения количества просмотров сущности.
-     *
-     * @Route("/{project}/{entity}/{id}", methods={"GET"})
-     *
-     * @param int $id Идентификатор сущности.
-     * @param string $project Название проекта.
-     * @param string $entity Название сущности.
-     *
-     * @return JsonResponse Возвращает количество просмотров сущности.
      */
     #[Route('/{project}/{entity}/{id}', methods: ['GET'])]
     public function getViewCounts(int $id, string $project, string $entity): JsonResponse
@@ -108,7 +92,9 @@ class EntityController extends AbstractController
             return new JsonResponse(['error' => 'Missing required route parameters'], Response::HTTP_BAD_REQUEST);
         }
 
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $project) || !preg_match('/^[a-zA-Z0-9_-]+$/', $entity) || !filter_var($id, FILTER_VALIDATE_INT)) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $project) ||
+            !preg_match('/^[a-zA-Z0-9_-]+$/', $entity) ||
+            !filter_var($id, FILTER_VALIDATE_INT)) {
             return new JsonResponse(['error' => 'Invalid route parameters'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -120,8 +106,8 @@ class EntityController extends AbstractController
         $response = [
             'data' => [
                 $id => [
-                    'page_views' => (int)$viewCount['page_views'],
-                    'phone_views' => (int)$viewCount['phone_views']
+                    'page_views'  => (int)$viewCount['page_views'],
+                    'phone_views' => (int)$viewCount['phone_views'],
                 ],
             ],
         ];
@@ -131,18 +117,9 @@ class EntityController extends AbstractController
 
     /**
      * Метод получения статистики просмотров сущности за периоды.
-     *
-     * @Route("/{project}/{entity}/{id}/periods/", methods={"GET"})
-     *
-     * @param Request $request Запрос с параметрами периодов.
-     * @param int $id Идентификатор сущности.
-     * @param string $project Название проекта.
-     * @param string $entity Название сущности.
-     *
-     * @return JsonResponse Возвращает статистику просмотров за периоды.
      */
     #[Route('/{project}/{entity}/{id}/periods/', methods: ['GET'])]
-    public function getStatistics(Request $request, int $id, string $project, string $entity): JsonResponse
+    public function getStatistics(Request $request, string $project, string $entity, int $id): JsonResponse
     {
         $periods = $request->query->all()['period'] ?? [];
         if (empty($periods)) {
