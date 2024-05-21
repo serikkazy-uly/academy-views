@@ -5,6 +5,7 @@ namespace App\Repository;
 
 use App\Entity\EntityViewCounts;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -81,7 +82,7 @@ class EntityRepository extends ServiceEntityRepository
      * Метод нахождения статистики просмотров для сущности за указанный период.
      * @return array Возвращает массив с суммарными значениями просмотров за период.
      */
-public function findViewStatistics(int $id, string $project, string $entity, string $fromDate, string $toDate): array
+public function findViewStatistics(string $project, string $entity, int $id, string $fromDate, string $toDate): array
     {
         $qb = $this->createQueryBuilder('e');
         $qb->select('SUM(e.pageViews) as pageViews', 'SUM(e.phoneViews) as phoneViews')
@@ -110,4 +111,24 @@ public function findViewStatistics(int $id, string $project, string $entity, str
             'phone_views' => (int)$result['phoneViews']
         ];
     }
+
+    public function updateViewCountsBulk(string $project, string $entity, int $id, int $pageViews, int $phoneViews, EntityManagerInterface $entityManager)
+    {
+        $viewCount = $this->findOneBy(['entityId' => $id, 'entity' => $entity, 'project' => $project]);
+        if (!$viewCount) {
+            $viewCount = new EntityViewCounts();
+            $viewCount->setProject($project);
+            $viewCount->setEntity($entity);
+            $viewCount->setEntityId($id);
+            $viewCount->setPageViews(0);
+            $viewCount->setPhoneViews(0);
+            $entityManager->persist($viewCount);
+        }
+
+        $viewCount->setPageViews($viewCount->getPageViews() + $pageViews);
+        $viewCount->setPhoneViews($viewCount->getPhoneViews() + $phoneViews);
+
+        return $viewCount;
+    }
+
 }

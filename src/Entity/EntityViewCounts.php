@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace App\Entity;
 
 use App\Repository\EntityRepository;
@@ -120,6 +120,7 @@ class EntityViewCounts
     public function setDate(?\DateTimeInterface $date): self
     {
         $this->date = $date;
+
         return $this;
     }
 
@@ -131,6 +132,7 @@ class EntityViewCounts
     public function setProject(string $project): self
     {
         $this->project = $project;
+
         return $this;
     }
 

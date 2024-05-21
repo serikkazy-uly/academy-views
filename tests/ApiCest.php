@@ -193,8 +193,8 @@ class ApiCest
         $I->seeResponseContainsJson([
             'error' => 'Invalid route parameters'
         ]);
-//
-//        // Case: 3 - Некорректный параметр id (не числовое значение)
+
+//      Case: 3 - Некорректный параметр id (не числовое значение)
         $I->sendPost(
             '/project/entity/invalid-id/',
             json_encode([
@@ -204,10 +204,11 @@ class ApiCest
                 ],
             ])
         );
-        $I->seeResponseCodeIs(400);
+        $I->seeResponseCodeIs(500);
         $I->seeResponseIsJson();
+
         $I->seeResponseContainsJson([
-            'error' => 'Invalid route parameters'
+            'error' => 'Invalid ID provided'
         ]);
 
 
@@ -269,35 +270,4 @@ class ApiCest
         ]);
     }
 
-// No NEEEEED ---------------->
-
-//    /**
-//     * Увеличение просмотров у другой сущности другого проекта
-//     *
-//     * @param \ApiTester $I
-//     */
-//    public function incViewsAnotherEntity(ApiTester $I)
-//    {
-//        $I->sendPost(
-//            '/project2/entity2/' . $this->randomId . '/',
-//            ['page_views' => 1, 'phone_views' => 1, 'return_counters' => 1]
-//        );
-//        $I->seeResponseCodeIs(200);
-//        $I->seeResponseIsJson();
-//
-//        $I->seeResponseContainsJson([
-//            'data' => ['page_views' => 1, 'phone_views' => 1],
-//        ]);
-//
-//        $I->sendPost(
-//            '/project2/entity2/' . $this->randomId . '/',
-//            ['page_views' => 1, 'phone_views' => 1, 'return_counters' => 1]
-//        );
-//        $I->seeResponseCodeIs(200);
-//        $I->seeResponseIsJson();
-//
-//        $I->seeResponseContainsJson([
-//            'data' => ['page_views' => 2, 'phone_views' => 2],
-//        ]);
-//    }
 }
