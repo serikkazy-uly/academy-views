@@ -5,13 +5,11 @@ namespace App\Controller;
 
 use App\Service\DateValidator;
 use App\Repository\EntityRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-
 
 /**
  * Контроллер для управления просмотрами сущностей.
@@ -28,19 +26,13 @@ class EntityController extends AbstractController
      */
     private DateValidator $dateValidator;
 
-    /*
-     * Менеджер сущностей для работы с базой данных
-     * */
-    private EntityManagerInterface $entityManager;
-
     /**
      * Конструктор класса управления просмотрами сущностей.
      */
-    public function __construct(EntityRepository $entityRepository, DateValidator $dateValidator, EntityManagerInterface $entityManager)
+    public function __construct(EntityRepository $entityRepository, DateValidator $dateValidator)
     {
         $this->entityRepository = $entityRepository;
         $this->dateValidator    = $dateValidator;
-        $this->entityManager    = $entityManager;
     }
 
     /**
@@ -52,7 +44,7 @@ class EntityController extends AbstractController
         $res = json_decode($request->getContent(), true);
 
         if (empty($res['data'])) {
-            return new JsonResponse(['error' => 'Missing required parameters'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['error' => 'Missing required paramet                                                                                                           ers'], Response::HTTP_BAD_REQUEST);
         }
 
         $updates   = $res['data'];
@@ -107,6 +99,64 @@ class EntityController extends AbstractController
     }
 
     /**
+     * Метод получения статистики просмотров сущности за периоды пачкой
+     */
+    #[Route('/{project}/{entity}/bulk-stats/', methods: ['GET'])]
+    public function getBulkStatistics(Request $request, string $project, string $entity): JsonResponse
+    {
+        $ids     = $request->query->get('ids');
+        $periods = $request->query->all()['periods'] ?? [];
+
+        if (empty($ids)) {
+            return new JsonResponse(['error' => 'No IDs provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (empty($periods)) {
+            return new JsonResponse(['error' => 'No periods provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $idsArray   = explode(',', $ids);
+        $statistics = [];
+
+        foreach ($idsArray as $id) {
+            if (!filter_var($id, FILTER_VALIDATE_INT)) {
+                return new JsonResponse(['error' => 'Invalid ID provided: ' . $id], Response::HTTP_BAD_REQUEST);
+            }
+
+            foreach ($periods as $periodName => $range) {
+                if (isset($range['from']) && isset($range['to'])) {
+                    if (!$this->dateValidator->isValidDate($range['from']) || !$this->dateValidator->isValidDate($range['to'])) {
+                        $statistics[$periodName][$id] = ['error' => 'Invalid date format'];
+                        continue;
+                    }
+
+                    $fromDate = \DateTime::createFromFormat('Y-m-d', $range['from']);
+                    $toDate   = \DateTime::createFromFormat('Y-m-d', $range['to']);
+
+                    if ($fromDate > $toDate) {
+                        $statistics[$periodName][$id] = [
+                            'error' => sprintf('The start date ("%s" from) must be earlier and before the end date ("%s" to)',
+                                $range['from'], $range['to']),
+                        ];
+                        continue;
+                    }
+
+                    $stats                        = $this->entityRepository->findViewStatistics($project, $entity,
+                        (int)$id, $range['from'], $range['to']);
+                    $statistics[$periodName][$id] = [
+                        'page_views'  => $stats['page_views'],
+                        'phone_views' => $stats['phone_views'],
+                    ];
+                } else {
+                    $statistics[$periodName][$id] = ['error' => 'Invalid period range'];
+                }
+            }
+        }
+
+        return new JsonResponse(['data' => $statistics]);
+    }
+
+    /**
      * Метод обновления количества просмотров
      */
     #[Route('/{project}/{entity}/{id}/', methods: ['POST'])]
@@ -138,7 +188,7 @@ class EntityController extends AbstractController
 
         $response = [
             'data' => [
-                'page_views' => $view->getPageViews(),
+                'page_views'  => $view->getPageViews(),
                 'phone_views' => $view->getPhoneViews(),
             ],
         ];
@@ -223,33 +273,5 @@ class EntityController extends AbstractController
 
         return new JsonResponse(['data' => $statistics]);
     }
-
-
-
-
-
-
-
-    /*
-     * Метод отдачи или возврата просмотров пачкой
-     * */
-    //    #[Route('/{project}/entity/{id}/bulk-stats', methods: ['GET'])]
-//    public function getBulkStatistics(Request $request, string $project, int $id): JsonResponse
-//    {
-//        $periods = $request->query->get('periods', []);
-//        $statistics = [];
-//
-//        foreach ($periods as $periodName => $range) {
-//            if (isset($range['from'], $range['to'])) {
-//                $stats = $this->entityRepository->findViewStatistics($id, $project, $range['from'], $range['to']);
-//                $statistics[$periodName] = $stats;
-//            } else {
-//                $statistics[$periodName] = ['error' => 'Invalid period range'];
-//            }
-//        }
-//
-//        return $this->json(['data' => $statistics]);
-//    }
-
 
 }

@@ -9,24 +9,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * Класс для работы с сущностями
+ * Класс для работы с просмотрами сущностей
+ *
  * @extends ServiceEntityRepository<EntityViewCounts>
  */
 class EntityRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-
     /**
-     * Конструктор класса.
+     * Конструктор класса управления просмотрами сущностей.
      *
      * @param ManagerRegistry $registry Реестр менеджеров для работы с сущностями.
      */
+    public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, EntityViewCounts::class);
     }
 
     /**
      * Метод обновления количества просмотров для сущностей.
+     *
      * @return EntityViewCounts Возвращает обновленную сущность просмотра.
      */
     public function updateViewCounts(string $project, string $entity, int $id, int $pageViews, int $phoneViews): EntityViewCounts
@@ -82,7 +83,7 @@ class EntityRepository extends ServiceEntityRepository
      * Метод нахождения статистики просмотров для сущности за указанный период.
      * @return array Возвращает массив с суммарными значениями просмотров за период.
      */
-public function findViewStatistics(string $project, string $entity, int $id, string $fromDate, string $toDate): array
+    public function findViewStatistics(string $project, string $entity, int $id, string $fromDate, string $toDate): array
     {
         $qb = $this->createQueryBuilder('e');
         $qb->select('SUM(e.pageViews) as pageViews', 'SUM(e.phoneViews) as phoneViews')
@@ -112,7 +113,10 @@ public function findViewStatistics(string $project, string $entity, int $id, str
         ];
     }
 
-    public function updateViewCountsBulk(string $project, string $entity, int $id, int $pageViews, int $phoneViews, EntityManagerInterface $entityManager)
+    /**
+     * Метод обновления количества просмотров для сущностей пачкой.
+     */
+    public function updateViewCountsBulk(string $project, string $entity, int $id, int $pageViews, int $phoneViews, EntityManagerInterface $entityManager): EntityViewCounts
     {
         $viewCount = $this->findOneBy(['entityId' => $id, 'entity' => $entity, 'project' => $project]);
         if (!$viewCount) {
